@@ -8,8 +8,8 @@ from flask import (
     url_for
 )
 from flask_cors import CORS
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
+from ai_edge_litert.interpreter import Interpreter
+from PIL import Image
 from werkzeug.utils import secure_filename
 from disease_info import disease_details
 
@@ -38,10 +38,17 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # -------------------------------------------------
 # Load model
 # -------------------------------------------------
-model = load_model("model/model.h5")
+interpreter = Interpreter(
+    model_path="model/model.tflite",
+    num_threads=1
+)
 
-print("Model loaded successfully")
-print("Output Shape:", model.output_shape)
+interpreter.allocate_tensors()
+
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+print("LiteRT model loaded successfully")
 
 
 # -------------------------------------------------
@@ -435,41 +442,44 @@ def upload_image():
         }), 400
 
     unique_name = f"{uuid4().hex}_{safe_name}"
-    filepath = os.path.join(
-        UPLOAD_FOLDER,
-        unique_name
-    )
+    filepath = os.path.join(UPLOAD_FOLDER, unique_name)
 
     file.save(filepath)
 
     try:
-        # Image preprocessing
-        img = image.load_img(
-            filepath,
-            target_size=(224, 224)
+        # Image preprocessing using Pillow
+        with Image.open(filepath) as img:
+            img = img.convert("RGB")
+            img = img.resize((224, 224))
+
+            input_data = np.asarray(
+                img,
+                dtype=np.float32
+            )
+
+        input_data = input_data / 255.0
+        input_data = np.expand_dims(input_data, axis=0)
+
+        # LiteRT prediction
+        interpreter.set_tensor(
+            input_details[0]["index"],
+            input_data
         )
 
-        img = image.img_to_array(img)
-        img = img / 255.0
-        img = np.expand_dims(img, axis=0)
+        interpreter.invoke()
 
-        # Prediction
-        prediction = model.predict(
-            img,
-            verbose=0
+        prediction = interpreter.get_tensor(
+            output_details[0]["index"]
         )
 
-        index = int(np.argmax(prediction))
-        confidence = float(
-            np.max(prediction)
-        ) * 100
+        index = int(np.argmax(prediction[0]))
+        confidence = float(np.max(prediction[0])) * 100
 
         disease_key = categories[index]
 
         print("Prediction:", disease_key)
         print("Confidence:", confidence)
 
-        # Store result so it remains when language changes
         session["last_prediction"] = {
             "disease_key": disease_key,
             "confidence": confidence
