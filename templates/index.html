@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="{{ 'kn' if lang == 'kn' else 'en' }}">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>{{ ui.app_name }}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+
+<div class="background"></div>
+
+<div class="wrapper">
+
+    <!-- =====================================
+         HEADER
+    ====================================== -->
+
+    <header>
+
+        <div class="logo-area">
+
+            <div class="logo">
+                🌿
+            </div>
+
+            <div>
+
+                <h1 id="title">
+                    {{ ui.app_name }}
+                </h1>
+
+                <p id="subtitle">
+                    {{ ui.subtitle }}
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="language-switch">
+
+            <button
+                id="enBtn"
+                type="button"
+                class="{{ 'active' if lang == 'en' else '' }}"
+            >
+                EN
+            </button>
+
+            <button
+                id="knBtn"
+                type="button"
+                class="{{ 'active' if lang == 'kn' else '' }}"
+            >
+                ಕನ್ನಡ
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================
+         HERO SECTION
+    ====================================== -->
+
+    <section class="hero">
+
+        <div class="hero-left">
+
+            <h2 id="heroHeading">
+                {{ ui.hero_title }}
+            </h2>
+
+            <p id="heroText">
+                {{ ui.hero_description }}
+            </p>
+
+            <div class="feature-list">
+
+                <div class="feature">
+                    ✔ {{ ui.fast_detection }}
+                </div>
+
+                <div class="feature">
+                    ✔ {{ ui.high_accuracy }}
+                </div>
+
+                <div class="feature">
+                    ✔ {{ ui.recommendations }}
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================
+             IMAGE UPLOAD
+        ====================================== -->
+
+        <div class="hero-right">
+
+            <div class="upload-card">
+
+                <form
+                    action="{{ url_for('upload_image') }}"
+                    method="POST"
+                    enctype="multipart/form-data"
+                >
+
+                    <label class="upload-box">
+
+                        <input
+                            type="file"
+                            name="image"
+                            id="imageInput"
+                            accept="image/png, image/jpeg, image/jpg"
+                            required
+                        >
+
+                        <div class="upload-icon">
+                            📷
+                        </div>
+
+                        <h3 id="uploadTitle">
+                            {{ ui.upload_title }}
+                        </h3>
+
+                        <p id="uploadSub">
+                            PNG • JPG • JPEG
+                        </p>
+
+                    </label>
+
+
+                    <div class="preview-box">
+
+                        <img
+                            id="preview"
+                            alt="{{ ui.upload_title }}"
+                        >
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="scan-btn"
+                        id="scanBtn"
+                    >
+                        {{ ui.scan_leaf }}
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================
+         PREDICTION RESULT
+    ====================================== -->
+
+    {% if prediction %}
+
+    <section class="result-section">
+
+        <h1 class="crop-name">
+            {{ crop }}
+        </h1>
+
+        <div class="disease-heading">
+            {{ ui.disease_affected }}
+        </div>
+
+        <h2 class="disease-name">
+            {{ disease }}
+        </h2>
+
+
+        <!-- Confidence -->
+
+        <div class="confidence">
+
+            <p>
+                {{ ui.confidence }}
+            </p>
+
+            <h2>
+                {{ confidence }}%
+            </h2>
+
+            <div class="progress">
+
+                <div
+                    class="progress-fill"
+                    style="width: {{ confidence }}%;"
+                ></div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Information Cards -->
+
+        <div class="info-grid">
+
+            <!-- Cause -->
+
+            <div class="info-card cause-card">
+
+                <div class="card-icon">
+                    📖
+                </div>
+
+                <h3>
+                    {{ ui.cause }}
+                </h3>
+
+                <p>
+                    {{ cause }}
+                </p>
+
+            </div>
+
+
+            <!-- Symptoms -->
+
+            <div class="info-card symptoms-card">
+
+                <div class="card-icon">
+                    👀
+                </div>
+
+                <h3>
+                    {{ ui.symptoms }}
+                </h3>
+
+                <ul>
+
+                    {% for item in symptoms %}
+
+                    <li>
+                        {{ item }}
+                    </li>
+
+                    {% endfor %}
+
+                </ul>
+
+            </div>
+
+
+            <!-- Recommendations -->
+
+            <div class="info-card solution-card">
+
+                <div class="card-icon">
+                    ✅
+                </div>
+
+                <h3>
+                    {{ ui.solutions }}
+                </h3>
+
+                <ul>
+
+                    {% for item in solution %}
+
+                    <li>
+                        {{ item }}
+                    </li>
+
+                    {% endfor %}
+
+                </ul>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    {% endif %}
+
+
+    <!-- =====================================
+         FOOTER
+    ====================================== -->
+
+    <footer>
+
+        <div class="footer-line"></div>
+
+        <p>
+            {{ ui.footer }}
+        </p>
+
+        <p>
+            {% if lang == "kn" %}
+                ಪ್ರಜ್ವಲ್ ಹಂಚಿನಾಳ ಅವರಿಂದ ಅಭಿವೃದ್ಧಿಪಡಿಸಲಾಗಿದೆ
+            {% else %}
+                Developed by Prajwal Hanchinal
+            {% endif %}
+        </p>
+
+    </footer>
+
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+
+</html>
